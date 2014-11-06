@@ -43,3 +43,47 @@ ln -fs /vagrant /var/www
 #install karma
 
 #service mysql start
+
+#Set up CWF development environment
+mkdir /sites/
+cd /sites
+
+wget "http://repo.rgt.internal/service/local/artifact/maven/redirect?r=releases-mit-cache&g=internal.brandx&a=brandx-site&v=1.50.2&e=tar.gz&c=drupal" -O brandx-site-drupal.tar.gz
+wget "http://repo.rgt.internal/service/local/artifact/maven/redirect?r=releases-mit-cache&g=internal.brandx&a=bovada-web&v=1.51.1&e=tar.gz&c=drupal" -O bovada-web-drupal.tar.gz
+tar xzvf brandx-site-drupal.tar.gz
+tar xzvf bovada-web-drupal.tar.gz
+cd www.brand--x.com/config
+./process.py mdev
+cd ../../www.bovada.lv/config
+./process.py mdev
+
+rm environments.php
+cat << EOF | sudo tee -a environments.php
+<?php
+$databases = array (
+  'default' =>
+  array (
+    'default' =>
+    array (
+      'unix_socket' => '/tmp/mysql.sock',
+      'database' => 'brandx_web',
+      'username' => 'root',
+      'password' => '',
+      'host' => '127.0.0.1',
+      'port' => '',
+      'driver' => 'mysql',
+      'prefix' => 'brandx_com_',
+    ),
+  ),
+);
+ini_set('cookie_domain', 'bovada.lv');
+$cookie_domain = 'bovada.lv';
+ini_set ('memory_limit', '256M');
+EOF
+
+cd ../../www.brand--x.com/htdocs/
+cp -r ../../www.bovada.lv/htdocs/sites/ .
+cd sites/www.bovada.lv/
+ln -s ../../../../www.bovada.lv/config/environments.php
+
+
