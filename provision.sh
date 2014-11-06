@@ -2,7 +2,7 @@
 
 #Creating Vagrant box for web dev
 
-apt-get update
+apt-get -y update
 
 #install curl
 #apt-get -y install curl
@@ -11,11 +11,15 @@ apt-get update
 #ruby -e "$(wget -O- https://raw.github.com/Homebrew/linuxbrew/go/install)"
 #ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
+#install vim
+apt-get install -y vim
 
-#install apache2
+
+#install apache2 (service apache status) and remove default web directory with vagrant (shared) directory
 apt-get install -y apache2
-#rm -rf /var/www
-#ln -fs /vagrant /var/www
+
+rm -rf /var/www
+ln -fs /vagrant /var/www
 
 
 #install mysql
