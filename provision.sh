@@ -1,53 +1,70 @@
 #!/usr/bin/env bash
-
 #Creating Vagrant box for web dev
 
 apt-get -y update
 
-#install curl
-#apt-get -y install curl
-
-#install homebrew
-#ruby -e "$(wget -O- https://raw.github.com/Homebrew/linuxbrew/go/install)"
-#ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
 #install vim
 apt-get install -y vim
 
-
-#install apache2 (service apache status) and remove default web directory with vagrant (shared) directory
+#install apache2
 apt-get install -y apache2
 
+#remove default web directory with vagrant (shared) directory
 rm -rf /var/www
-ln -fs /vagrant /var/www
-
+ln -fs /vagrant/www /var/www
 
 #install mysql
-#apt-get install mysql-server libapache2-mod-auth-mysql php5-mysql
-#apt-get install -y php5-mysql mysql-server
+export DEBIAN_FRONTEND=noninteractive
+apt-get -y install mysql-server libapache2-mod-auth-mysql php5-mysql
+mysqladmin -u root create brandx_web
+
+#restoring the required database
+cd /vagrant/www/db
+gzip -cd 127.0.0.1-brandx_web-04-09-14-16-40.sql.gz | mysql -uroot brandx_web
+
+#install php5
+apt-get -y install php5 libapache2-mod-php5 php5-mcrypt
+
+#enable mod_rewrite and mod_headers
+a2enmod rewrite
+a2enmod headers
+a2enmod proxy
+a2enmod ssl
+
+#set CWF apache configurations
+cd /etc/apache2
+rm /etc/apache2/httpd.conf
+ln -s /vagrant/www/config/httpd.conf
+service apache2 restart
 
 
 
 #install git
-
+# apt-get -y install git
 #install nodejs, npm
-
 #install compass
-
 #install varnish3
-
 #install sequelpro
-
 #install grunt-cli
-
 #install karma
 
-#service mysql start
+#NEED TO VERIFY
+#Create a self-signed SSL
+# openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days XXX
+# openssl genrsa -des3 -out server.key 1024
+# openssl req -new -key server.key -out server.csr
+# cp server.key server.key.original
+# openssl rsa -in server.key.original -out server.key
+# openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt
+# cat server.crt server.key > server.pem
+
 
 #Set up CWF development environment
-mkdir /sites/
-cd /sites
+#MAKEIF
+mkdir /vagrant/www/CWF
+cd /vagrant/www/CWF
 
+#download CWF and bovada.lv site
 wget "http://repo.rgt.internal/service/local/artifact/maven/redirect?r=releases-mit-cache&g=internal.brandx&a=brandx-site&v=1.50.2&e=tar.gz&c=drupal" -O brandx-site-drupal.tar.gz
 wget "http://repo.rgt.internal/service/local/artifact/maven/redirect?r=releases-mit-cache&g=internal.brandx&a=bovada-web&v=1.51.1&e=tar.gz&c=drupal" -O bovada-web-drupal.tar.gz
 tar xzvf brandx-site-drupal.tar.gz
@@ -57,6 +74,7 @@ cd www.brand--x.com/config
 cd ../../www.bovada.lv/config
 ./process.py mdev
 
+# #Overrite the environments file
 rm environments.php
 cat << EOF | sudo tee -a environments.php
 <?php
@@ -81,6 +99,7 @@ $cookie_domain = 'bovada.lv';
 ini_set ('memory_limit', '256M');
 EOF
 
+# #Copy all code into brand--x
 cd ../../www.brand--x.com/htdocs/
 cp -r ../../www.bovada.lv/htdocs/sites/ .
 cd sites/www.bovada.lv/
